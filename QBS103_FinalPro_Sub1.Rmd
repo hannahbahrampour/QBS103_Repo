@@ -27,6 +27,7 @@ series_matrix <- read.table(file = "QBS103_GSE157103_series_matrix.csv",
                        sep = "\t", header = TRUE, stringsAsFactors = FALSE)
 
 # trying to find common columns within the two files
+
 head(genes)
 head(series_matrix)
 
