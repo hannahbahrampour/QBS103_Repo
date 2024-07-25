@@ -33,7 +33,7 @@ head(series_matrix)
 
 genes_long <- reshape2::melt(genes, id.vars = "QBS103_GSE157103_genes")
 
-merged_data <- merge(genes_long, series_matrix, by = "participant id")
+merged_data <- merge(genes, series_matrix, id = "COVID_01_39y_male_NonICU")
 
 ```
 
