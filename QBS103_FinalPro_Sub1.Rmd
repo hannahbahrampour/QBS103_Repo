@@ -18,7 +18,7 @@ setwd("/Users/hannahbahrampour/Desktop/QBS103 Final Project")
 # checking to see where I am
 getwd()
 
-# using read.table to read in both of the files
+# using read.table to read in both the files
 
 genes <- read.table(file = "QBS103_GSE157103_genes.csv",
                        sep = "\t", header = TRUE, stringsAsFactors = FALSE)
