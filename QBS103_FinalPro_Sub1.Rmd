@@ -1,0 +1,53 @@
+---
+title: "Submission 1"
+output: html_document
+name: "Hannah Bahram Pour"
+date: "2024-07-23"
+---
+
+
+``` {r}
+
+# installing needed packages
+library(tidyverse)
+library(reshape2)
+
+# setting my working directory
+setwd("/Users/hannahbahrampour/Desktop/QBS103 Final Project")
+
+# checking to see where I am
+getwd()
+
+# using read.table to read in both of the files
+
+genes <- read.table(file = "QBS103_GSE157103_genes.csv",
+                       sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+series_matrix <- read.table(file = "QBS103_GSE157103_series_matrix.csv",
+                       sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+
+# trying to find common columns within the two files
+head(genes)
+head(series_matrix)
+
+genes_long <- reshape2::melt(genes, id.vars = "QBS103_GSE157103_genes")
+
+merged_data <- merge(genes_long, series_matrix, by = "participant id")
+
+```
+
+# histogram
+``` {r}
+
+```
+
+# scatterplot
+``` {r}
+
+```
+
+# boxplot
+``` {r}
+
+```
+
