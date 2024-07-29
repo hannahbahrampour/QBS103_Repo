@@ -58,11 +58,15 @@ breaks=10, col = "hotpink", xlab = "Gene Expression")
 # creating scatterplot for gene expression and continuous covariate (age)
 ggplot(clean_data, aes(x = age, y = Expression)) +
   geom_point(color = "magenta") + # adding points and magenta color
-  geom_smooth(method = loess, se = FALSE, color = "blue") + 
   geom_rug() + # adding rug
   labs(title = "Scatterplot of ABCA7 Gene Expression vs Age (years)",
        x = "Age (years)", y = "Gene Expression ABCA7") + # label the scatterplot
-  theme_classic() 
+  theme_classic() + # getting rid of the background grid
+  theme( # adjusting the title and axis title
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold")
+  ) +
+geom_smooth(method = "loess", se = FALSE, color = "black", linetype = "dashed")
 
 ```
 
@@ -73,7 +77,11 @@ ggplot(data_merged, aes(x = sex, y = Expression, fill = icu_status)) +
   labs(title = "Viewing Gene Expression Separated by Sex and ICU Status",
        x = "Sex", y = "Gene Expression") + # labeling things
   scale_alpha_manual(name = "ICU Status") +
-  theme_classic() # getting rid of background grid
+  theme_classic() + # getting rid of background grid
+  theme( # adjusting the title and axis title
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold")
+  )
 
 
 ```
