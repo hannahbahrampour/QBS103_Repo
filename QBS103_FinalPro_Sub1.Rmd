@@ -1,8 +1,10 @@
 ---
 title: "Final Project Submission 1"
-output: html_document
-name: "Hannah Bahram Pour"
+output:
+  pdf_document: default
+  html_document: default
 date: "2024-07-23"
+name: Hannah Bahram Pour
 ---
 
 ``` {r}
