@@ -40,9 +40,9 @@ data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
 
 ```{r}
 # selecting my gene and filtering for it
-# assign this selected gene data to a variable
+# assign this clean selected gene data to a variable
 clean_data <- data_merged %>%
-  filter(X == "ABCA7") %>%
+  filter(X == "ABCA7") %>% # gene selection
   select(X, ParticipantID, Expression, age, sex, icu_status)
 
 # ensure values are numeric if not already
@@ -56,19 +56,19 @@ breaks=10, col = "hotpink", xlab = "Gene Expression")
 
 ```{r}
 # creating scatterplot for gene expression and continuous covariate (age)
-ggplot(data_merged, aes(x = "ABCA7", y = age)) +
+scatter <- ggplot(clean_data, aes(x = age, y = Expression)) +
   geom_point(color = "magenta") + # adding points and magenta color
   geom_rug() + # adding rug
-  labs(title = "Scatterplot of ABCA7 Gene Expression vs Age",
-       x = "Gene Expression", y = "Age") + # label the scatterplot
-  theme_classic() # getting rid of background grid
+  labs(title = "Scatterplot of ABCA7 Gene Expression vs Age (years)",
+       x = "Age (years)", y = "Gene Expression ABCA7") + # label the scatterplot
+  theme_classic() 
 
 ```
 
 ```{r}
 # boxplot of gene expression separated by two categorical covariates (sex and ICU status)
 ggplot(data_merged, aes(x = sex, y = Expression, fill = icu_status)) +
-  geom_boxplot() + 
+  geom_boxplot() + # adding in the boxplot 
   labs(title = "Viewing Gene Expression Separated by Sex and ICU Status",
        x = "Sex", y = "Gene Expression") + # labeling things
   scale_alpha_manual(name = "ICU Status") +
