@@ -1,54 +1,79 @@
 ---
-title: "Submission 1"
+title: "Final Project Submission 1"
 output: html_document
 name: "Hannah Bahram Pour"
 date: "2024-07-23"
 ---
 
-
 ``` {r}
-
 # installing needed packages
 library(tidyverse)
 library(reshape2)
+library(ggplot2)
 
 # setting my working directory
-setwd("/Users/hannahbahrampour/Desktop/QBS103 Final Project")
+setwd("/Users/hannahbahrampour/Desktop")
 
 # checking to see where I am
 getwd()
 
-# using read.table to read in both the files
+# using read.csv to read in both of the files and assign them to shorter variable names
 
-genes <- read.table(file = "QBS103_GSE157103_genes.csv",
-                       sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+genes <- read.csv(file = "QBS103_GSE157103_genes.csv")
 
-series_matrix <- read.table(file = "QBS103_GSE157103_series_matrix.csv",
-                       sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+series_matrix <- read.csv(file = "QBS103_GSE157103_series_matrix.csv")
 
-# trying to find common columns within the two files
+# melting the genes data into the long format
+# Jaini helped me understand the concept of melting and why it is
+# necessary in this case
+gene_long <- genes %>% tidyr::gather(key = "ParticipantID", value = 
+                                        "Expression", -X)
 
-head(genes)
-head(series_matrix)
+# rename a column in the series_matrix to match with genes_long
+series_matrix <- series_matrix %>%
+  rename(ParticipantID = participant_id)
 
-genes_long <- reshape2::melt(genes, id.vars = "QBS103_GSE157103_genes")
+# merge the data together
+data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
+```
 
-merged_data <- merge(genes, series_matrix, id = "COVID_01_39y_male_NonICU")
+
+```{r}
+# selecting my gene and filtering for it
+# assign this selected gene data to a variable
+clean_data <- data_merged %>%
+  filter(X == "ABCA7") %>%
+  select(X, ParticipantID, Expression, age, sex, icu_status)
+
+# ensure values are numeric if not already
+clean_data$Expression <- as.numeric(clean_data$Expression)
+
+# creating a histogram to show my gene expression
+# making the histogram hot pink and labeling it
+hist(clean_data$Expression, main = paste("Expression of ABCA7 Gene"),
+breaks=10, col = "hotpink", xlab = "Gene Expression")
+```
+
+```{r}
+# creating scatterplot for gene expression and continuous covariate (age)
+ggplot(data_merged, aes(x = "ABCA7", y = age)) +
+  geom_point(color = "magenta") + # adding points and magenta color
+  geom_rug() + # adding rug
+  labs(title = "Scatterplot of ABCA7 Gene Expression vs Age",
+       x = "Gene Expression", y = "Age") + # label the scatterplot
+  theme_classic() # getting rid of background grid
 
 ```
 
-# histogram
-``` {r}
+```{r}
+# boxplot of gene expression separated by two categorical covariates (sex and ICU status)
+ggplot(data_merged, aes(x = sex, y = Expression, fill = icu_status)) +
+  geom_boxplot() + 
+  labs(title = "Viewing Gene Expression Separated by Sex and ICU Status",
+       x = "Sex", y = "Gene Expression") + # labeling things
+  scale_alpha_manual(name = "ICU Status") +
+  theme_classic() # getting rid of background grid
 
-```
-
-# scatterplot
-``` {r}
-
-```
-
-# boxplot
-``` {r}
 
 ```
 
