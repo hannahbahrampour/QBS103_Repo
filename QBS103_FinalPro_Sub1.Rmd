@@ -61,7 +61,7 @@ breaks=10, col = "hotpink", xlab = "Gene Expression")
 ggplot(clean_data, aes(x = age, y = Expression)) +
   geom_point(aes(color = age)) + # adding points and color dependent on age
   geom_rug() + # adding rug
-  labs(title = "Scatterplot of ABCA7 Gene Expression vs Age (years)",
+  labs(title = "ABCA7 Gene Expression vs Age (years)",
        x = "Age (years)", y = "Gene Expression ABCA7") + # label the scatterplot
   theme_classic() + # getting rid of the background grid
   theme( # adjusting text sizes
