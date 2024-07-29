@@ -72,10 +72,11 @@ ggplot(clean_data, aes(x = age, y = Expression)) +
 ```
 
 ```{r}
-# boxplot of gene expression separated by two categorical covariates (sex and ICU status)
+# cleaning out data for unknown sex
 new_clean_data <- clean_data %>%
   filter(sex == " male" | sex == " female")
 
+# boxplot of gene expression separated by two categorical covariates (sex and ICU status)
 ggplot(new_clean_data, aes(x = sex, y = Expression, fill = icu_status)) +
   geom_boxplot() + # adding in the boxplot 
   labs(title = "Viewing Gene Expression Separated by Sex and ICU Status",
