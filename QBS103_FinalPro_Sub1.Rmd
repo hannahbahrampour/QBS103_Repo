@@ -62,17 +62,21 @@ ggplot(clean_data, aes(x = age, y = Expression)) +
   labs(title = "Scatterplot of ABCA7 Gene Expression vs Age (years)",
        x = "Age (years)", y = "Gene Expression ABCA7") + # label the scatterplot
   theme_classic() + # getting rid of the background grid
-  theme( # adjusting the title and axis title
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
-    axis.title = element_text(face = "bold", size = 14),
-  ) +
-geom_smooth(method = "loess", se = FALSE, color = "black", linetype = "dashed")
+  theme( # adjusting text sizes
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title = element_text(size = 14),
+    legend.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 5) # trying to make the x-axis more readable
+  ) 
 
 ```
 
 ```{r}
 # boxplot of gene expression separated by two categorical covariates (sex and ICU status)
-ggplot(data_merged, aes(x = sex, y = Expression, fill = icu_status)) +
+new_clean_data <- clean_data %>%
+  filter(sex == " male" | sex == " female")
+
+ggplot(new_clean_data, aes(x = sex, y = Expression, fill = icu_status)) +
   geom_boxplot() + # adding in the boxplot 
   labs(title = "Viewing Gene Expression Separated by Sex and ICU Status",
        x = "Sex", y = "Gene Expression") + # labeling things
