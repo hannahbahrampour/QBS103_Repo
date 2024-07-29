@@ -56,8 +56,9 @@ breaks=10, col = "hotpink", xlab = "Gene Expression")
 
 ```{r}
 # creating scatterplot for gene expression and continuous covariate (age)
-scatter <- ggplot(clean_data, aes(x = age, y = Expression)) +
+ggplot(clean_data, aes(x = age, y = Expression)) +
   geom_point(color = "magenta") + # adding points and magenta color
+  geom_smooth(method = loess, se = FALSE, color = "blue") + 
   geom_rug() + # adding rug
   labs(title = "Scatterplot of ABCA7 Gene Expression vs Age (years)",
        x = "Age (years)", y = "Gene Expression ABCA7") + # label the scatterplot
