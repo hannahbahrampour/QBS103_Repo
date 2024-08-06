@@ -5,26 +5,97 @@ date: "2024-08-06"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r}
+# installing needed packages
+library(tidyverse)
+library(reshape2)
+library(ggplot2)
+
+# setting my working directory
+setwd("/Users/hannahbahrampour/Desktop")
+
+# checking to see where I am
+getwd()
+
+# using read.csv to read in both of the files and assign them to shorter variable names
+
+genes <- read.csv(file = "QBS103_GSE157103_genes.csv")
+
+series_matrix <- read.csv(file = "QBS103_GSE157103_series_matrix.csv")
+
+# melting the genes data into the long format
+# Jaini helped me understand the concept of melting and why it is
+# necessary in this case
+gene_long <- genes %>% tidyr::gather(key = "ParticipantID", value = 
+                                        "Expression", -X)
+
+# rename a column in the series_matrix to match with genes_long
+series_matrix <- series_matrix %>%
+  rename(ParticipantID = participant_id)
+
+# merge the data together
+data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
+
 ```
 
-## R Markdown
+```{r}
+create_plots <- function(data_merged, gene_names, continuous_covariate, categorical_covariate1, categorical_covariate2) {
+  
+  # Iterate through the gene names
+  for (gene in gene_names) {
+    # Filter data for the current gene
+    clean_data <- data_merged %>%
+      filter(X == gene) %>% # gene selection
+      select(X, ParticipantID, Expression, age, sex, icu_status)
+    
+    # Ensure values are numeric if not already
+    clean_data$Expression <- as.numeric(clean_data$Expression)
+    
+    # Create histogram
+    hist(clean_data$Expression, main = paste("Expression of", gene, "Gene"),
+         breaks=10, col = "hotpink", xlab = "Gene Expression")
+    
+    # Create scatterplot for gene expression and continuous covariate
+scatter_plot <- ggplot(clean_data, aes_string(x = continuous_covariate, y = "Expression")) +
+      geom_point(aes_string(color = continuous_covariate)) + # adding points and color dependent on continuous covariate
+      geom_rug() + # adding rug
+      labs(title = paste(gene, "Gene Expression vs", continuous_covariate),
+           x = continuous_covariate, y = paste("Gene Expression", gene)) + # label the scatterplot
+      theme_classic() + # getting rid of the background grid
+      theme( # adjusting text sizes
+        plot.title = element_text(hjust = 0.5, size = 16),
+        axis.title = element_text(size = 14),
+        legend.title = element_text(hjust = 0.5),
+        axis.text.x = element_text(size = 5) # trying to make the x-axis more readable
+      )
+    
+    print(scatter_plot)
+    
+    # Clean out data for unknown sex
+    new_clean_data <- clean_data %>%
+      filter(sex == " male" | sex == " female")
+    
+    # Create boxplot of gene expression separated by two categorical covariates
+    
+box_plot <- ggplot(new_clean_data, aes_string(x = categorical_covariate1, y = "Expression", fill = categorical_covariate2)) +
+      geom_boxplot() + # adding in the boxplot 
+      labs(title = paste("Viewing", gene, "Gene Expression Separated by", categorical_covariate1, "and", categorical_covariate2),
+           x = categorical_covariate1, y = "Gene Expression") + # labeling things
+      scale_alpha_manual(name = categorical_covariate2) +
+      theme_classic() + # getting rid of background grid
+      theme( # adjusting the title and axis title
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        axis.title = element_text(face = "bold")
+      )
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+    print(box_plot)
+  }
+}
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
+```{r}
 
-You can also embed plots, for example:
+create_plots(data_merged, c("ABCA7"), "age", "sex", "icu_status")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
