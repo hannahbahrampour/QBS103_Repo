@@ -68,6 +68,7 @@ create_plots <- function(data_merged, gene_names, continuous_covariate,
     clean_data <- na.omit(clean_data)
     
     # converting my selected continous covariate (age) to numeric
+    # this is fixing the feedback from the previous submission
     clean_data$age <- as.numeric(clean_data$age)
     
     # Create histogram
