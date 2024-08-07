@@ -2,10 +2,15 @@
 title: "FinalPro_Sub2"
 author: "Hannah Bahram Pour"
 date: "2024-08-06"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r}
+
+# the code in this chunk is very similar to the code from submission 1
+
 # installing needed packages
 library(tidyverse)
 library(reshape2)
@@ -25,7 +30,7 @@ series_matrix <- read.csv(file = "QBS103_GSE157103_series_matrix.csv")
 
 # melting the genes data into the long format
 # Jaini helped me understand the concept of melting and why it is
-# necessary in this case
+# necessary in this case during submission 1
 gene_long <- genes %>% tidyr::gather(key = "ParticipantID", value = 
                                         "Expression", -X)
 
@@ -39,7 +44,15 @@ data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
 ```
 
 ```{r}
-create_plots <- function(data_merged, gene_names, continuous_covariate, categorical_covariate1, categorical_covariate2) {
+
+# much of the code used in my function is very similar to the code in submission 1
+
+# naming and creating my function
+
+# function takes in data frame, one+ genes, 1 continuous covariate, and two
+# categorical covariates
+create_plots <- function(data_merged, gene_names, continuous_covariate,
+                         categorical_covariate1, categorical_covariate2) {
   
   # Iterate through the gene names
   for (gene in gene_names) {
@@ -51,25 +64,33 @@ create_plots <- function(data_merged, gene_names, continuous_covariate, categori
     # Ensure values are numeric if not already
     clean_data$Expression <- as.numeric(clean_data$Expression)
     
+    # using na.omit to get rid of NA's from data
+    clean_data <- na.omit(clean_data)
+    
+    # converting my selected continous covariate (age) to numeric
+    clean_data$age <- as.numeric(clean_data$age)
+    
     # Create histogram
     hist(clean_data$Expression, main = paste("Expression of", gene, "Gene"),
          breaks=10, col = "hotpink", xlab = "Gene Expression")
     
     # Create scatterplot for gene expression and continuous covariate
-scatter_plot <- ggplot(clean_data, aes_string(x = continuous_covariate, y = "Expression")) +
-      geom_point(aes_string(color = continuous_covariate)) + # adding points and color dependent on continuous covariate
-      geom_rug() + # adding rug
+scatter_plot <- ggplot(clean_data, aes_string(x = continuous_covariate,
+                                              y = "Expression")) +
+      # adding points and color dependent on continuous covariate
+      geom_point(aes_string(color = continuous_covariate)) + 
+      geom_rug() + # adding rug and labeling plot before
       labs(title = paste(gene, "Gene Expression vs", continuous_covariate),
-           x = continuous_covariate, y = paste("Gene Expression", gene)) + # label the scatterplot
+           x = continuous_covariate, y = paste("Gene Expression", gene)) +
       theme_classic() + # getting rid of the background grid
       theme( # adjusting text sizes
-        plot.title = element_text(hjust = 0.5, size = 16),
-        axis.title = element_text(size = 14),
-        legend.title = element_text(hjust = 0.5),
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        axis.title = element_text(size = 14, face = "bold"),
+        legend.title = element_text(hjust = 0.5, face = "bold"),
         axis.text.x = element_text(size = 5) # trying to make the x-axis more readable
       )
     
-    print(scatter_plot)
+    print(scatter_plot) # printing the scatterplot
     
     # Clean out data for unknown sex
     new_clean_data <- clean_data %>%
@@ -77,18 +98,20 @@ scatter_plot <- ggplot(clean_data, aes_string(x = continuous_covariate, y = "Exp
     
     # Create boxplot of gene expression separated by two categorical covariates
     
-box_plot <- ggplot(new_clean_data, aes_string(x = categorical_covariate1, y = "Expression", fill = categorical_covariate2)) +
+box_plot <- ggplot(new_clean_data, aes_string(x = categorical_covariate1,
+                                              y = "Expression", fill = categorical_covariate2)) +
       geom_boxplot() + # adding in the boxplot 
-      labs(title = paste("Viewing", gene, "Gene Expression Separated by", categorical_covariate1, "and", categorical_covariate2),
+      labs(title = paste(gene, "Gene Expression with", categorical_covariate1,
+                         "and", categorical_covariate2),
            x = categorical_covariate1, y = "Gene Expression") + # labeling things
       scale_alpha_manual(name = categorical_covariate2) +
       theme_classic() + # getting rid of background grid
       theme( # adjusting the title and axis title
-        plot.title = element_text(hjust = 0.5, face = "bold"),
-        axis.title = element_text(face = "bold")
+        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
+        axis.title = element_text(size = 14, face = "bold")
       )
 
-    print(box_plot)
+    print(box_plot) # printing the box plot
   }
 }
 
@@ -96,6 +119,27 @@ box_plot <- ggplot(new_clean_data, aes_string(x = categorical_covariate1, y = "E
 
 ```{r}
 
-create_plots(data_merged, c("ABCA7"), "age", "sex", "icu_status")
+# creating vector of my selected genes
+selected_genes <- c("ABCA7", "AAAS", "ABCD1")
+
+# making a function that iterates through the genes and makes the graphs
+# this is a wrapper function! (learned about this in QBS101)
+make_gene_plots <- function(data_merged, selected_genes, continuous_covariate,
+                            categorical_covariate1,
+                 categorical_covariate2)
+  for (gene in selected_genes) { # going through the genes
+    create_plots(data_merged, c(gene), continuous_covariate, categorical_covariate1,
+                 categorical_covariate2) # calling previously written function
+  }
 
 ```
+
+```{r}
+
+# calling the function to create the graphs for the three genes
+
+make_gene_plots(data_merged, selected_genes, "age", "sex", "icu_status")
+
+```
+
+
