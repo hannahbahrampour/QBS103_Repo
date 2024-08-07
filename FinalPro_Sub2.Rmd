@@ -126,8 +126,7 @@ selected_genes <- c("ABCA7", "AAAS", "ABCD1")
 # making a function that iterates through the genes and makes the graphs
 # this is a wrapper function! (learned about this in QBS101)
 make_gene_plots <- function(data_merged, selected_genes, continuous_covariate,
-                            categorical_covariate1,
-                 categorical_covariate2)
+                            categorical_covariate1, categorical_covariate2)
   for (gene in selected_genes) { # going through the genes
     create_plots(data_merged, c(gene), continuous_covariate, categorical_covariate1,
                  categorical_covariate2) # calling previously written function
