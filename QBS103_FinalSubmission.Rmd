@@ -41,14 +41,6 @@ data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
 
 ```
 
-```{r}
-library(pheatmap)
-
-variance <- apply(data_merged, MARGIN = 1, FUN = var)
-
-
-```
-
 
 ```{r}
 
@@ -131,7 +123,7 @@ selected_gene <- c("ABCA7", "AAAS", "ABCD1")
 # this is a wrapper function! (learned about this in QBS101)
 make_gene_plots <- function(data_merged, selected_genes, continuous_covariate,
                             categorical_covariate1, categorical_covariate2)
-  for (gene in selected_genes) { # going through the genes
+  for (gene in selected_gene) { # going through the genes
     create_plots(data_merged, c(gene), continuous_covariate, categorical_covariate1,
                  categorical_covariate2) # calling previously written function
   }
@@ -139,6 +131,30 @@ make_gene_plots <- function(data_merged, selected_genes, continuous_covariate,
 
 # calling the function to create the graphs for the three genes
 
-make_gene_plots(data_merged, selected_genes, "age", "sex", "icu_status")
+make_gene_plots(data_merged, selected_gene, "age", "sex", "icu_status")
 
 ```
+
+```{r}
+library(pheatmap)
+
+variance <- apply(data_merged, MARGIN = 1, FUN = var)
+
+var_data <- data_merged[order(variance, decreasing = T), ]
+
+log2.var_data <- log2(var_data)
+
+pheatmap(log2.var_data[1:20,],
+cluster_rows = F,
+cluster_cols = F)
+
+```
+
+```{r}
+
+
+
+
+```
+
+
