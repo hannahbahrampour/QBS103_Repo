@@ -7,12 +7,15 @@ output: html_document
 
 ```{r}
 
-# the code in this chunk is very similar to the code from previous submissions
-
 # installing needed packages
 library(tidyverse)
 library(reshape2)
 library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(pheatmap)
+
+# this code is very similar as my code from previous submissions
 
 # setting my working directory
 setwd("/Users/hannahbahrampour/Desktop")
@@ -26,18 +29,23 @@ genes <- read.csv(file = "QBS103_GSE157103_genes.csv")
 
 series_matrix <- read.csv(file = "QBS103_GSE157103_series_matrix.csv")
 
-# melting the genes data into the long format
-# Jaini helped me understand the concept of melting and why it is
-# necessary in this case during submission 1
-gene_long <- genes %>% tidyr::gather(key = "ParticipantID", value = 
-                                        "Expression", -X)
-
 # rename a column in the series_matrix to match with genes_long
 series_matrix <- series_matrix %>%
   rename(ParticipantID = participant_id)
 
 # merge the data together
-data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
+data_long <- merge(gene_long, series_matrix, by = "ParticipantID")
+
+# getting rid of all the NA's with the data
+data_long <- na.omit(data_long)
+
+```
+
+
+```{r}
+
+table <- data_merged %>%
+  
 
 ```
 
@@ -137,26 +145,40 @@ make_gene_plots(data_merged, selected_gene, "age", "sex", "icu_status")
 
 ```{r}
 
-library(pheatmap)
+heatmap_genes <- c("AADAC", "AASS", "AATK", "ABCA1", "AASS", "AAAS",
+                   "AACS", "ABCD1", "ABCF1", "ABCA4")
 
-numeric_data <- data_merged[sapply(data_merged, is.numeric)]
+numeric_data <- data_long[sapply(data_long, is.numeric)]
 
-variance <- apply(numeric_data, MARGIN = 1, FUN = var)
+numeric_data[numeric_data == 0] <- 0.0000001
 
-var_data <- numeric_data[order(variance, decreasing = TRUE), ]
+selected_genes_data <- numeric_data[colnames(numeric_data) %in% heatmap_genes, ]
+
+variance <- apply(selected_genes_data, MARGIN = 2, FUN = var, na.rm = TRUE)
+
+var_data <- selected_genes_data[, order(variance, decreasing = TRUE)]
 
 log2_var_data <- log2(var_data)
 
-pheatmap(log2_var_data[1:20,],
-         cluster_rows = FALSE,
-         cluster_cols = FALSE)
+annotationData <- data.frame(row.names = colnames(miRNA),
+'Status' = c(factor(rbinom(n = 25,size = 1,prob = 0.6),
+labels = c('Disease X','Healthy'))))
+
+
+annotationColors <- list(Status = c('Disease X' = 'aquamarine4',
+'Healthy' = 'deepskyblue4'))
+
+pheatmap(log2_var_data,
+         cluster_rows = TRUE,
+         cluster_cols = TRUE,
+         annotation_col = annotationData,
+         annotation_colors = annotationColors)
+
 
 
 ```
 
 ```{r}
-
-
 
 
 ```
