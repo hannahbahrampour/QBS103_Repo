@@ -136,17 +136,21 @@ make_gene_plots(data_merged, selected_gene, "age", "sex", "icu_status")
 ```
 
 ```{r}
+
 library(pheatmap)
 
-variance <- apply(data_merged, MARGIN = 1, FUN = var)
+numeric_data <- data_merged[sapply(data_merged, is.numeric)]
 
-var_data <- data_merged[order(variance, decreasing = T), ]
+variance <- apply(numeric_data, MARGIN = 1, FUN = var)
 
-log2.var_data <- log2(var_data)
+var_data <- numeric_data[order(variance, decreasing = TRUE), ]
 
-pheatmap(log2.var_data[1:20,],
-cluster_rows = F,
-cluster_cols = F)
+log2_var_data <- log2(var_data)
+
+pheatmap(log2_var_data[1:20,],
+         cluster_rows = FALSE,
+         cluster_cols = FALSE)
+
 
 ```
 
