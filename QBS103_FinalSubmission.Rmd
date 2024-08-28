@@ -116,19 +116,43 @@ ggplot(new_clean_data, aes(x = sex, y = Expression, fill = icu_status)) +
 
 # GENERATING HEATMAP
 
-colnames(data_merged)
-
-genes <- c("A1BG", "AASS", "AATK", "ABCA1", "AASS", "AAAS", "AACS", "ABCD1",
-           "ABCF1", "ABCA4")
-
 heatmap_data <- data_merged %>%
-  filter(X %in% genes) %>%
+  dplyr::filter(X %in% c("A1BG", "AASS", "AATK", "ABCA1", "AASS", "AAAS",
+                         "AACS", "ABCD1", "ABCF1", "ABCA4")) %>%
+  tidyr::pivot_wider(names_from = X, values_from = Expression)
 
-rownames(heatmap_data) <- heatmap_data$participant_id
+rownames(heatmap_data) <- heatmap_data$ParticipantID
 
-heatmap_data <- heatmap_data %>% select(-participant_id)
+heatmap_data <- heatmap_data %>% select(-ParticipantID)
 
 heatmap_data <- as.data.frame(t(heatmap_data))
+
+heatmap_data <- heatmap_data %>%
+  mutate(across(everything(), as.numeric))
+
+annotationData <- data_merged %>%
+  dplyr::select(ParticipantID, sex, icu_status) %>%
+  filter(ParticipantID %in% colnames(heatmap_data)) %>%
+  column_to_rownames("ParticipantID")
+
+annotationColors <- list(
+  sex = c("female" = "hotpink", "male" = "lightblue"),
+  icu_status = c("yes" = "darkgreen", "no" = "red")
+)
+
+heatmap_data[heatmap_data == "unknown" | heatmap_data == " unknown" |
+                heatmap_data == " :" | heatmap_data == " >89"] <- NA
+
+heatmap_data <- na.omit(heatmap_data)
+
+pheatmap(heatmap_data,
+         clustering_distance_cols = "euclidean",
+         clustering_distance_rows = "euclidean",
+         annotation_col = annotationData,
+         annotation_colors = annotationColors,
+         fontsize_col = 3,
+         annotation_legend = TRUE,
+         main = "Heatmap of Gene Expression with Sex and ICU Status")
 
 
 ```
