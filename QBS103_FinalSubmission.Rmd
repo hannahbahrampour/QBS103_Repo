@@ -15,6 +15,8 @@ library(dplyr)
 library(tidyr)
 library(pheatmap)
 
+# most of this code is the exact same as Submission 1 and 2
+
 # setting my working directory
 setwd("/Users/hannahbahrampour/Desktop")
 
@@ -27,147 +29,136 @@ genes <- read.csv(file = "QBS103_GSE157103_genes.csv")
 
 series_matrix <- read.csv(file = "QBS103_GSE157103_series_matrix.csv")
 
-```
+# melting the genes data into the long format
+# Jaini helped me understand the concept of melting and why it is
+# necessary in this case
+gene_long <- genes %>% tidyr::gather(key = "ParticipantID", value = 
+                                        "Expression", -X)
 
+# rename a column in the series_matrix to match with genes_long
+series_matrix <- series_matrix %>%
+  rename(ParticipantID = participant_id)
 
-```{r}
-
-table <- data_merged %>%
-  
-
-```
-
-
-```{r}
-
-# this code is the same as from submission 2
-
-# naming and creating my function
-
-# function takes in data frame, one+ genes, 1 continuous covariate, and two
-# categorical covariates
-create_plots <- function(data_merged, gene_names, continuous_covariate,
-                         categorical_covariate1, categorical_covariate2) {
-  
-  # Iterate through the gene names
-  for (gene in gene_names) {
-    # Filter data for the current gene
-    clean_data <- data_merged %>%
-      filter(X == gene) %>% # gene selection
-      select(X, ParticipantID, Expression, age, sex, icu_status)
-    
-    # Ensure values are numeric if not already
-    clean_data$Expression <- as.numeric(clean_data$Expression)
-    
-    # using na.omit to get rid of NA's from data
-    clean_data <- na.omit(clean_data)
-    
-    # converting my selected continous covariate (age) to numeric
-    # this is fixing the feedback from the previous submission
-    clean_data$age <- as.numeric(clean_data$age)
-    
-    # Create histogram
-    hist(clean_data$Expression, main = paste("Expression of", gene, "Gene"),
-         breaks=10, col = "hotpink", xlab = "Gene Expression")
-    
-    # Create scatterplot for gene expression and continuous covariate
-scatter_plot <- ggplot(clean_data, aes_string(x = continuous_covariate,
-                                              y = "Expression")) +
-      # adding points and color dependent on continuous covariate
-      geom_point(aes_string(color = continuous_covariate)) + 
-      geom_rug() + # adding rug and labeling plot before
-      labs(title = paste(gene, "Gene Expression vs", continuous_covariate),
-           x = continuous_covariate, y = paste("Gene Expression", gene)) +
-      theme_classic() + # getting rid of the background grid
-      theme( # adjusting text sizes
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        axis.title = element_text(size = 14, face = "bold"),
-        legend.title = element_text(hjust = 0.5, face = "bold"),
-        axis.text.x = element_text(size = 5) # trying to make the x-axis more readable
-      )
-    
-    print(scatter_plot) # printing the scatterplot
-    
-    # Clean out data for unknown sex
-    new_clean_data <- clean_data %>%
-      filter(sex == " male" | sex == " female")
-    
-    # Create boxplot of gene expression separated by two categorical covariates
-    
-box_plot <- ggplot(new_clean_data, aes_string(x = categorical_covariate1,
-                                              y = "Expression", fill = categorical_covariate2)) +
-      geom_boxplot() + # adding in the boxplot 
-      labs(title = paste(gene, "Gene Expression with", categorical_covariate1,
-                         "and", categorical_covariate2),
-           x = categorical_covariate1, y = "Gene Expression") + # labeling things
-      scale_alpha_manual(name = categorical_covariate2) +
-      theme_classic() + # getting rid of background grid
-      theme( # adjusting the title and axis title
-        plot.title = element_text(hjust = 0.5, size = 16, face = "bold"),
-        axis.title = element_text(size = 14, face = "bold")
-      )
-
-    print(box_plot) # printing the box plot
-  }
-}
-
-
-# creating vector of my selected genes
-selected_gene <- c("ABCA7", "AAAS", "ABCD1")
-
-# making a function that iterates through the genes and makes the graphs
-# this is a wrapper function! (learned about this in QBS101)
-make_gene_plots <- function(data_merged, selected_genes, continuous_covariate,
-                            categorical_covariate1, categorical_covariate2)
-  for (gene in selected_gene) { # going through the genes
-    create_plots(data_merged, c(gene), continuous_covariate, categorical_covariate1,
-                 categorical_covariate2) # calling previously written function
-  }
-
-
-# calling the function to create the graphs for the three genes
-
-make_gene_plots(data_merged, selected_gene, "age", "sex", "icu_status")
+# merge the data together
+data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
 
 ```
 
 ```{r}
 
-heatmap_genes <- c("AADAC", "AASS", "AATK", "ABCA1", "AASS", "AAAS",
-                   "AACS", "ABCD1", "ABCF1", "ABCA4")
-
-numeric_data <- data_long[sapply(data_long, is.numeric)]
-
-numeric_data[numeric_data == 0] <- 0.0000001
-
-selected_genes_data <- numeric_data[colnames(numeric_data) %in% heatmap_genes, ]
-
-variance <- apply(selected_genes_data, MARGIN = 2, FUN = var, na.rm = TRUE)
-
-var_data <- selected_genes_data[, order(variance, decreasing = TRUE)]
-
-log2_var_data <- log2(var_data)
-
-annotationData <- data.frame(row.names = colnames(miRNA),
-'Status' = c(factor(rbinom(n = 25,size = 1,prob = 0.6),
-labels = c('Disease X','Healthy'))))
-
-
-annotationColors <- list(Status = c('Disease X' = 'aquamarine4',
-'Healthy' = 'deepskyblue4'))
-
-pheatmap(log2_var_data,
-         cluster_rows = TRUE,
-         cluster_cols = TRUE,
-         annotation_col = annotationData,
-         annotation_colors = annotationColors)
-
+table_data <- data_merged %>%
+  tidyr::pivot_wider(names_from = X, values_from = Expression) %>%
+  dplyr::select(c("age", "sex", "icu_status", "disease_status",
+                  "ferritin.ng.ml.", "lactate.mmol.l."))
 
 
 ```
 
 ```{r}
 
+# this code is almost identical to my code from submission 1
+# with the exception of code improvements I made based off feedback
+
+# selecting my gene and filtering for it
+# assign this clean selected gene data to a variable
+clean_data <- data_merged %>%
+  filter(X == "ABCA7") %>% # gene selection
+  select(X, ParticipantID, Expression, age, sex, icu_status)
+
+# ensure values are numeric if not already
+clean_data$Expression <- as.numeric(clean_data$Expression)
+
+# added this based off submission 1 feedback
+# ensuring that age is numeric
+clean_data$age <- as.numeric(clean_data$age)
+
+# CREATING HISTOGRAM
+# making the histogram hot pink and labeling it
+hist(clean_data$Expression, main = paste("Expression of ABCA7 Gene"),
+breaks=10, col = "hotpink", xlab = "Gene Expression")
+
+# CREATING SCATTERPLOT
+# for gene expression and continuous covariate (age)
+ggplot(clean_data, aes(x = age, y = Expression)) +
+  geom_point(aes(color = age)) + # adding points and color dependent on age
+  geom_rug() + # adding rug
+  labs(title = "ABCA7 Gene Expression vs Age (years)",
+       x = "Age (years)", y = "Gene Expression ABCA7") + # label the scatterplot
+  theme_classic() + # getting rid of the background grid
+  theme( # adjusting text sizes
+    plot.title = element_text(hjust = 0.5, size = 16),
+    axis.title = element_text(size = 14),
+    legend.title = element_text(hjust = 0.5),
+    axis.text.x = element_text(size = 5) # trying to make the x-axis more readable
+  ) 
+
+# cleaning out data for unknown sex
+new_clean_data <- clean_data %>%
+  filter(sex == " male" | sex == " female")
+
+# CREATING BOXPLOT
+# gene expression separated by two categorical covariates (sex and ICU status)
+ggplot(new_clean_data, aes(x = sex, y = Expression, fill = icu_status)) +
+  geom_boxplot() + # adding in the boxplot 
+  labs(title = "Viewing ABCA7 Gene Expression, Sex, and ICU Status",
+       x = "Sex", y = "Gene Expression") + # labeling things
+  scale_alpha_manual(name = "ICU Status") +
+  theme_classic() + # getting rid of background grid
+  theme( # adjusting the title and axis title
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    axis.title = element_text(face = "bold")
+  )
+
+
+```
+
+```{r}
+
+# GENERATING HEATMAP
+
+colnames(data_merged)
+
+genes <- c("A1BG", "AASS", "AATK", "ABCA1", "AASS", "AAAS", "AACS", "ABCD1",
+           "ABCF1", "ABCA4")
+
+heatmap_data <- data_merged %>%
+  filter(X %in% genes) %>%
+
+rownames(heatmap_data) <- heatmap_data$participant_id
+
+heatmap_data <- heatmap_data %>% select(-participant_id)
+
+heatmap_data <- as.data.frame(t(heatmap_data))
+
+
+```
+
+```{r}
+
+# GENERATING NEW PLOT TYPE
+# Selected plot type: density plot
+
+# selecting columns and data of interest for density plot
+density_data <- data_merged %>%
+  select(X, ParticipantID, Expression, age, sex, icu_status)
+
+# cleaning out all the sex's that are identified as unknown
+density_data <- density_data %>%
+  filter(sex == " male" | sex == " female")
+
+# creating density plot
+density_plot <- ggplot(density_data, aes(x = Expression))
+density_plot + geom_density(aes(fill = sex), alpha = 0.8) +
+  labs(title = "Density Plot", y = "Density", subtitle = "Age Grouped by Sex",
+       x = "Age", fill = "Sex") +
+  theme_classic() +
+  theme(
+    plot.title = element_text(face = "bold"),
+    axis.title = element_text(hjust = 0.5, face = "bold")
+  )
+
+# learned about density plot's and how to program them in R at this website:
+# http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html
 
 ```
 
