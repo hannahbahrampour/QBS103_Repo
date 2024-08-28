@@ -15,8 +15,6 @@ library(dplyr)
 library(tidyr)
 library(pheatmap)
 
-# this code is very similar as my code from previous submissions
-
 # setting my working directory
 setwd("/Users/hannahbahrampour/Desktop")
 
@@ -28,16 +26,6 @@ getwd()
 genes <- read.csv(file = "QBS103_GSE157103_genes.csv")
 
 series_matrix <- read.csv(file = "QBS103_GSE157103_series_matrix.csv")
-
-# rename a column in the series_matrix to match with genes_long
-series_matrix <- series_matrix %>%
-  rename(ParticipantID = participant_id)
-
-# merge the data together
-data_long <- merge(gene_long, series_matrix, by = "ParticipantID")
-
-# getting rid of all the NA's with the data
-data_long <- na.omit(data_long)
 
 ```
 
