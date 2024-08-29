@@ -2,7 +2,9 @@
 title: "QBS103_FinalSubmission"
 author: "Hannah Bahram Pour"
 date: "2024-08-20"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r}
@@ -14,6 +16,7 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(pheatmap)
+library(table1)
 
 # most of this code is the exact same as Submission 1 and 2
 
@@ -45,14 +48,65 @@ data_merged <- merge(gene_long, series_matrix, by = "ParticipantID")
 ```
 
 ```{r}
+#install.packages('xtable')
+library(table1)
+library(xtable)
 
-table_data <- data_merged %>%
-  tidyr::pivot_wider(names_from = X, values_from = Expression) %>%
-  dplyr::select(c("age", "sex", "icu_status", "disease_status",
-                  "ferritin.ng.ml.", "lactate.mmol.l."))
+# manual list of labels for my table
+labels_list <- list(
+  disease_status = "Disease Status",
+  sex = "Sex",
+  ferritin = "Ferritin (ng/ml)",
+  lactate = "Lactate (mmol/l)",
+  sofa = "Sofa",
+  icu_status = "ICU Status"
+)
+
+# making copy of merged data
+datatable <- data_merged
+
+# changing all the unknown values to NA
+datatable[datatable == "unknown" | datatable == " unknown" |
+                datatable == " :" | datatable == " >89"] <- NA
+
+datatable <- na.omit(datatable) # omitting the NAs
+
+levels(datatable$disease_status) # creating levels for disease status
+
+# function to get the median's of my variables
+# I got help from Antara to troubleshoot my function when it wasn't working
+mtable <- function(x, name, ...){
+  if (!is.numeric(x)) {
+    return(render.categorical.default(x))
+  }
+  # laying out all my statistical calculations for variables
+  calc <- switch(name,
+                 ferritin.ng.ml. = "Median [Min, Max]",
+                 lactate.mmol.l. = "Median [Min, Max]",
+                 sofa = "Median [Min, Max]",
+                 "Mean (SD)")
+  
+  # doing the actual calculations
+  parse.abbrev.render.code(c("", calc))(x)
+}
+
+# ensuring all values into the table are numeric
+datatable$ferritin.ng.ml. <- as.numeric(datatable$ferritin.ng.ml.)
+datatable$lactate.mmol.l. <- as.numeric(datatable$lactate.mmol.l.)
+datatable$sofa <- as.numeric(datatable$sofa)
+
+# actually making my table
+table1(~ icu_status + sex + ferritin.ng.ml. + lactate.mmol.l. + sofa |
+              disease_status, data = datatable, 
+              render = mtable, overall = "Overall")
+
+
+# I used the link below to help me use table1 and format my table
+# https://cran.r-project.org/web/packages/table1/vignettes/table1-examples.html
 
 
 ```
+
 
 ```{r}
 
@@ -109,53 +163,54 @@ ggplot(new_clean_data, aes(x = sex, y = Expression, fill = icu_status)) +
     axis.title = element_text(face = "bold")
   )
 
-
 ```
 
 ```{r}
 
 # GENERATING HEATMAP
 
+# Jaini helped me troubleshoot my heatmap!
+# She figured out why my data wasn't showing
+
+# filtering out data that I want and ten genes
 heatmap_data <- data_merged %>%
   dplyr::filter(X %in% c("A1BG", "AASS", "AATK", "ABCA1", "AASS", "AAAS",
                          "AACS", "ABCD1", "ABCF1", "ABCA4")) %>%
   tidyr::pivot_wider(names_from = X, values_from = Expression)
 
-rownames(heatmap_data) <- heatmap_data$ParticipantID
+# getting gene data into matrix
+heatmap_matrix <- heatmap_data %>%
+  select(all_of(c("A1BG", "AASS", "AATK", "ABCA1", "AASS", "AAAS",
+                         "AACS", "ABCD1", "ABCF1", "ABCA4"))) %>% as.matrix()
 
-heatmap_data <- heatmap_data %>% select(-ParticipantID)
+row.names(heatmap_matrix) <- heatmap_data$ParticipantID
 
-heatmap_data <- as.data.frame(t(heatmap_data))
+# converting to data frame 
+heatmap_matrix <- as.data.frame(t(heatmap_matrix))
 
-heatmap_data <- heatmap_data %>%
-  mutate(across(everything(), as.numeric))
+annotationData <- data.frame(row.names = colnames(heatmap_matrix),
+                         'Sex' = heatmap_data$sex,
+                         'Icu Status' = heatmap_data$icu_status)
 
-annotationData <- data_merged %>%
-  dplyr::select(ParticipantID, sex, icu_status) %>%
-  filter(ParticipantID %in% colnames(heatmap_data)) %>%
-  column_to_rownames("ParticipantID")
-
+# setting colors for annotations
 annotationColors <- list(
-  sex = c("female" = "hotpink", "male" = "lightblue"),
-  icu_status = c("yes" = "darkgreen", "no" = "red")
-)
+  Sex = c(' male' = 'navyblue', ' female' = 'hotpink', ' unknown' = 'black'),
+  icu_status = c('yes' = 'darkgreen', 'no' = 'red'))
 
-heatmap_data[heatmap_data == "unknown" | heatmap_data == " unknown" |
-                heatmap_data == " :" | heatmap_data == " >89"] <- NA
-
-heatmap_data <- na.omit(heatmap_data)
-
-pheatmap(heatmap_data,
-         clustering_distance_cols = "euclidean",
-         clustering_distance_rows = "euclidean",
+# generating heatmap
+pheatmap(heatmap_matrix,
          annotation_col = annotationData,
-         annotation_colors = annotationColors,
-         fontsize_col = 3,
-         annotation_legend = TRUE,
-         main = "Heatmap of Gene Expression with Sex and ICU Status")
-
+         annotation_colors = annotationColors, 
+         clustering_distance_rows = 'euclidean', 
+         clustering_distance_cols = 'euclidean', 
+         show_rownames = TRUE, 
+         show_colnames = FALSE,
+         fontsize = 5, 
+         annotation_legend = TRUE, 
+         main = 'Heatmap of Gene Expression with Sex and ICU Status') 
 
 ```
+
 
 ```{r}
 
